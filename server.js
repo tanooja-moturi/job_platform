@@ -10,57 +10,98 @@ const connectDB = require('./src/server/config/db');
 const app = express();
 const PORT = process.env.PORT || 5000;
 
-// Enforce environment variables
+// Enforce required environment variables
 if (!process.env.JWT_SECRET) {
   console.error('FATAL ERROR: JWT_SECRET is not defined in the environment variables.');
   process.exit(1);
 }
+if (!process.env.MONGO_URI) {
+  console.error('FATAL ERROR: MONGO_URI is not defined in the environment variables.');
+  process.exit(1);
+}
 
-// Ensure upload directory exists
+// Ensure upload directory exists (for resume file storage)
 const uploadDir = path.join(__dirname, 'src', 'server', 'uploads');
 if (!fs.existsSync(uploadDir)) {
   fs.mkdirSync(uploadDir, { recursive: true });
 }
 
-// Middleware
-app.use(express.json());
-app.use(express.urlencoded({ extended: true }));
+// ── CORS ──────────────────────────────────────────────────────────────────────
+// Supports multiple allowed origins via FRONTEND_URL (comma-separated if needed)
+// Example: FRONTEND_URL=https://jobboard.vercel.app
+const allowedOrigins = (process.env.FRONTEND_URL || 'http://localhost:5173')
+  .split(',')
+  .map((o) => o.trim())
+  .filter(Boolean);
+
 app.use(cors({
-  origin: process.env.FRONTEND_URL || 'http://localhost:5173',
-  credentials: true
+  origin: (origin, callback) => {
+    // Allow requests with no origin (e.g., Postman, Render health checks, curl)
+    if (!origin) return callback(null, true);
+    if (allowedOrigins.includes(origin)) return callback(null, true);
+    callback(new Error(`CORS: Origin '${origin}' not allowed`));
+  },
+  credentials: true,
 }));
 
+// ── Core Middleware ────────────────────────────────────────────────────────────
+app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
 
-// Global API Rate Limiting
-const apiLimiter = rateLimit({
-  windowMs: 15 * 60 * 1000, // 15 minutes
-  max: 100, // Limit each IP to 100 requests per `window` (here, per 15 minutes)
-  standardHeaders: true,
-  legacyHeaders: false,
-  message: { success: false, message: 'Too many requests from this IP, please try again after 15 minutes' }
+// ── Health Check ──────────────────────────────────────────────────────────────
+// Render and other platforms ping this to verify the service is alive
+app.get('/health', (req, res) => {
+  res.status(200).json({
+    status: 'ok',
+    service: 'Job Board API',
+    environment: process.env.NODE_ENV || 'development',
+    timestamp: new Date().toISOString(),
+  });
 });
 
-// API Routes
+// ── Global API Rate Limiting ───────────────────────────────────────────────────
+const apiLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  max: 100,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { success: false, message: 'Too many requests from this IP, please try again after 15 minutes' },
+});
+
+// ── API Routes ─────────────────────────────────────────────────────────────────
 app.use('/api', apiLimiter);
 app.use('/api/auth', require('./src/server/routes/auth'));
 app.use('/api/jobs', require('./src/server/routes/jobs'));
 app.use('/api/applications', require('./src/server/routes/applications'));
 
-// Serve React frontend in production
-if (process.env.NODE_ENV === 'production') {
-  app.use(express.static(path.join(__dirname, 'dist')));
-  
-  app.get('*', (req, res) => {
-    res.sendFile(path.resolve(__dirname, 'dist', 'index.html'));
-  });
-}
+// ── 404 handler for unknown API routes ────────────────────────────────────────
+app.use('/api/*', (req, res) => {
+  res.status(404).json({ success: false, message: `API route not found: ${req.originalUrl}` });
+});
 
-// Global Error Handler
-app.use(require('./src/server/middleware/errorHandler'));
-
-// Establish database connection before starting the server
-connectDB().then(() => {
-  app.listen(PORT, () => {
-    console.log(`🚀 Server running in ${process.env.NODE_ENV || 'development'} mode on port ${PORT}`);
+// ── Root route — confirms API is live ─────────────────────────────────────────
+app.get('/', (req, res) => {
+  res.status(200).json({
+    success: true,
+    message: 'Job Board API is running.',
+    version: '1.0.0',
+    docs: {
+      auth: '/api/auth',
+      jobs: '/api/jobs',
+      applications: '/api/applications',
+      health: '/health',
+    },
   });
 });
+
+// ── Global Error Handler ───────────────────────────────────────────────────────
+app.use(require('./src/server/middleware/errorHandler'));
+
+// ── Start Server ───────────────────────────────────────────────────────────────
+connectDB().then(() => {
+  app.listen(PORT, () => {
+    console.log(`🚀 Job Board API running in ${process.env.NODE_ENV || 'development'} mode on port ${PORT}`);
+    console.log(`✅ Allowed CORS origins: ${allowedOrigins.join(', ')}`);
+  });
+});
+
