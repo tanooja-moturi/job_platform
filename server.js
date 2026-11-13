@@ -26,20 +26,27 @@ if (!fs.existsSync(uploadDir)) {
   fs.mkdirSync(uploadDir, { recursive: true });
 }
 
+// Trust reverse proxy (e.g. Render, Heroku) for accurate client IP in rate limiting
+app.set('trust proxy', 1);
+
 // ── CORS ──────────────────────────────────────────────────────────────────────
 // Supports multiple allowed origins via FRONTEND_URL (comma-separated if needed)
-// Example: FRONTEND_URL=https://jobboard.vercel.app
+// Normalizes origins by trimming whitespace and stripping trailing slashes
 const allowedOrigins = (process.env.FRONTEND_URL || 'http://localhost:5173')
   .split(',')
-  .map((o) => o.trim())
+  .map((o) => o.trim().replace(/\/+$/, ''))
   .filter(Boolean);
 
 app.use(cors({
   origin: (origin, callback) => {
     // Allow requests with no origin (e.g., Postman, Render health checks, curl)
     if (!origin) return callback(null, true);
-    if (allowedOrigins.includes(origin)) return callback(null, true);
-    callback(new Error(`CORS: Origin '${origin}' not allowed`));
+    const normalizedOrigin = origin.replace(/\/+$/, '');
+    if (allowedOrigins.includes(normalizedOrigin)) {
+      return callback(null, true);
+    }
+    // Deny disallowed origins gracefully without throwing an uncaught 500 error
+    return callback(null, false);
   },
   credentials: true,
 }));
