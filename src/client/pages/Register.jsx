@@ -183,7 +183,7 @@ export default function Register() {
 
         <p style={{ textAlign: 'center', marginTop: '24px', color: 'var(--clr-text-3)', fontSize: '0.9rem' }}>
           Already have an account?{' '}
-          <Link to="/login" style={{ color: 'var(--clr-primary)', fontWeight: 600 }}>Sign in →</Link>
+          <Link to={formData.role === 'employer' ? '/employer/login' : '/seeker/login'} style={{ color: 'var(--clr-primary)', fontWeight: 600 }}>Sign in →</Link>
         </p>
       </div>
     </div>

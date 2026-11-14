@@ -145,8 +145,9 @@ export default function Navbar() {
               )}
             </div>
           ) : (
-            <div style={{ display: 'flex', gap: '8px' }}>
-              <Link to="/login" className="btn btn-ghost btn-sm">Sign In</Link>
+            <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+              <Link to="/employer/login" className="btn btn-ghost btn-sm">Employer Login</Link>
+              <Link to="/seeker/login" className="btn btn-ghost btn-sm">Job Seeker Login</Link>
               <Link to="/register" className="btn btn-primary btn-sm">Get Started</Link>
             </div>
           )}

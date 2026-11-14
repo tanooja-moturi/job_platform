@@ -44,7 +44,7 @@ exports.register = async (req, res, next) => {
 // @access  Public
 exports.login = async (req, res, next) => {
   try {
-    const { password } = req.body;
+    const { password, role } = req.body;
     const email = req.body.email ? req.body.email.trim().toLowerCase() : '';
 
     if (!email || !password) {
@@ -59,6 +59,15 @@ exports.login = async (req, res, next) => {
     const isMatch = await user.matchPassword(password);
     if (!isMatch) {
       return res.status(401).json({ success: false, message: 'Invalid credentials' });
+    }
+
+    // Role-based login validation
+    if (role && user.role !== role) {
+      const userRoleDisplay = user.role === 'employer' ? 'Employer' : 'Job Seeker';
+      return res.status(403).json({
+        success: false,
+        message: `This account is registered as a ${userRoleDisplay}. Please sign in via the ${userRoleDisplay} login page.`,
+      });
     }
 
     const token = generateToken(user._id);

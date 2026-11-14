@@ -10,6 +10,8 @@ import Jobs from './pages/Jobs';
 import JobDetail from './pages/JobDetail';
 import Login from './pages/Login';
 import Register from './pages/Register';
+import SeekerLogin from './pages/seeker/SeekerLogin';
+import EmployerLogin from './pages/employer/EmployerLogin';
 
 // Job Seeker pages
 import SeekerDashboard from './pages/seeker/SeekerDashboard';
@@ -34,6 +36,8 @@ export default function App() {
             <Route path="/jobs" element={<Jobs />} />
             <Route path="/jobs/:id" element={<JobDetail />} />
             <Route path="/login" element={<Login />} />
+            <Route path="/seeker/login" element={<SeekerLogin />} />
+            <Route path="/employer/login" element={<EmployerLogin />} />
             <Route path="/register" element={<Register />} />
 
             {/* Job Seeker protected */}

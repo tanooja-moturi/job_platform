@@ -29,8 +29,8 @@ export const AuthProvider = ({ children }) => {
     loadUser();
   }, [loadUser]);
 
-  const login = async (email, password) => {
-    const data = await authService.login(email, password);
+  const login = async (email, password, role) => {
+    const data = await authService.login(email, password, role);
     localStorage.setItem('jb_token', data.token);
     setToken(data.token);
     setUser(data.user);

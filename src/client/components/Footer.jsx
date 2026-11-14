@@ -23,7 +23,7 @@ export default function Footer() {
             <ul style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
               <li><Link to="/jobs" style={{ color: 'var(--clr-text-3)', fontSize: '0.875rem', transition: 'color 150ms' }}>Browse Jobs</Link></li>
               <li><Link to="/register" style={{ color: 'var(--clr-text-3)', fontSize: '0.875rem' }}>Create Account</Link></li>
-              <li><Link to="/login" style={{ color: 'var(--clr-text-3)', fontSize: '0.875rem' }}>Sign In</Link></li>
+              <li><Link to="/seeker/login" style={{ color: 'var(--clr-text-3)', fontSize: '0.875rem' }}>Job Seeker Login</Link></li>
             </ul>
           </div>
 
@@ -31,6 +31,7 @@ export default function Footer() {
           <div>
             <h4 style={{ fontWeight: 700, marginBottom: '16px', fontSize: '0.9rem', color: 'var(--clr-text)' }}>For Employers</h4>
             <ul style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+              <li><Link to="/employer/login" style={{ color: 'var(--clr-text-3)', fontSize: '0.875rem' }}>Employer Login</Link></li>
               <li><Link to="/register" style={{ color: 'var(--clr-text-3)', fontSize: '0.875rem' }}>Post a Job</Link></li>
               <li><Link to="/employer/dashboard" style={{ color: 'var(--clr-text-3)', fontSize: '0.875rem' }}>Dashboard</Link></li>
             </ul>
